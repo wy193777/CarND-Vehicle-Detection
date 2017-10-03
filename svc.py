@@ -7,6 +7,7 @@ import time
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
+from scipy.ndimage.measurements import label
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
 # from sklearn.model_selection import train_test_split
@@ -125,6 +126,42 @@ def read_vehicle_features():
 
 def read_non_vehicle_features():
     return read_images_to_features('samples/non-vehicles/**/*png')
+
+
+def add_heat(
+    bbox_list,
+    heatmap=None,
+    threshold=0
+):
+    # Iterate through list of bboxes
+    if not heatmap:
+        heatmap = np.zeros((720, 1280)).astype(np.float)
+    for box in bbox_list:
+        # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+    heatmap[heatmap <= threshold] = 0
+    # Return updated heatmap
+    return heatmap
+
+
+def draw_labeled_bboxes(img, heatmap):
+    labels = label(heatmap)
+    # Iterate through all detected cars
+    for car_number in range(1, labels[1]+1):
+        # Find pixels with each car_number label value
+        nonzero = (labels[0] == car_number).nonzero()
+        # Identify x and y values of those pixels
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        # Define a bounding box based on min/max x and y
+        bbox = (
+            (np.min(nonzerox), np.min(nonzeroy)),
+            (np.max(nonzerox), np.max(nonzeroy))
+        )
+        # Draw the box on the image
+        cv2.rectangle(img, bbox[0], bbox[1], (0, 0, 255), 6)
+    # Return the image
+    return img
 
 
 def generate_X_Y(car_features, notcar_features):
