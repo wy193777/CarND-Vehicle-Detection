@@ -15,7 +15,7 @@ from sklearn.cross_validation import train_test_split
 
 
 # Define a function to return HOG features and visualization
-def get_hog_features(img, orient, pix_per_cell, cell_per_block,
+def get_hog_features(img, orient=9, pix_per_cell=8, cell_per_block=2,
                      vis=False, feature_vec=True):
     # Call with two outputs if vis==True
     result = hog(
@@ -49,19 +49,7 @@ def extract_feature(img_path, cspace='YCrCb', orient=9,
                     pix_per_cell=8, cell_per_block=2, hog_channel=0):
     image = mpimg.imread(img_path)
     # apply color conversion if other than 'RGB'
-    if cspace != 'RGB':
-        if cspace == 'HSV':
-            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-        elif cspace == 'LUV':
-            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-        elif cspace == 'HLS':
-            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-        elif cspace == 'YUV':
-            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
-        elif cspace == 'YCrCb':
-            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
-    else:
-        feature_image = np.copy(image)
+    feature_image = convert_color(image, cspace)
 
     # Call get_hog_features() with vis=False, feature_vec=True
     if hog_channel == 'ALL':
@@ -82,13 +70,21 @@ def extract_feature(img_path, cspace='YCrCb', orient=9,
 # Have this function call bin_spatial() and color_hist()
 
 
-def convert_color(img, conv='RGB2YCrCb'):
-    if conv == 'RGB2YCrCb':
-        return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    if conv == 'BGR2YCrCb':
-        return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-    if conv == 'RGB2LUV':
-        return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
+def convert_color(image, cspace='YCrCb'):
+    if cspace != 'RGB':
+        if cspace == 'HSV':
+            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+        elif cspace == 'LUV':
+            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
+        elif cspace == 'HLS':
+            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+        elif cspace == 'YUV':
+            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+        elif cspace == 'YCrCb':
+            feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+    else:
+        feature_image = np.copy(image)
+    return feature_image
 
 
 def extract_features(imgs, cspace='YCrCb', orient=9,

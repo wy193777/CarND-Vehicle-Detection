@@ -34,7 +34,7 @@ class Pipeline(object):
 
         img_tosearch = img[ystart:ystop, :, :]
         ctrans_tosearch = svc.convert_color(
-            img_tosearch, conv='RGB2YCrCb')
+            img_tosearch, conv='YCrCb')
         if scale != 1:
             imshape = ctrans_tosearch.shape
             ctrans_tosearch = cv2.resize(
