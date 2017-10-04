@@ -23,10 +23,8 @@ class Pipeline(object):
     # Define a single function that can extract features using hog sub-sampling
     # and make predictions.
     def find_cars(
-        self,
-        img, ystart=400, ystop=650, scale=1.5, orient=9,
-        pix_per_cell=8,
-        cell_per_block=2, spatial_size=(32, 32), hist_bins=32,
+        self, img, ystart=400, ystop=650, scale=1.5, orient=9,
+        pix_per_cell=8, cell_per_block=2, vir=False
     ):
 
         draw_img = np.copy(img)
@@ -34,7 +32,7 @@ class Pipeline(object):
 
         img_tosearch = img[ystart:ystop, :, :]
         ctrans_tosearch = svc.convert_color(
-            img_tosearch, conv='YCrCb')
+            img_tosearch, cspace='YCrCb')
         if scale != 1:
             imshape = ctrans_tosearch.shape
             ctrans_tosearch = cv2.resize(
@@ -45,7 +43,6 @@ class Pipeline(object):
         # Define blocks and steps as above
         nxblocks = (ctrans_tosearch.shape[1] // pix_per_cell) - cell_per_block + 1
         nyblocks = (ctrans_tosearch.shape[0] // pix_per_cell) - cell_per_block + 1
-        nfeat_per_block = orient * cell_per_block**2
 
         # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
         window = 64
@@ -101,27 +98,42 @@ class Pipeline(object):
                                 ytop_draw + win_draw + ystart)
                         )
                     )
+                if vir:
+                    xbox_left = np.int(xleft * scale)
+                    ytop_draw = np.int(ytop * scale)
+                    win_draw = np.int(window * scale)
+                    cv2.rectangle(
+                        draw_img,
+                        (xbox_left, ytop_draw + ystart),
+                        (xbox_left + win_draw,
+                            ytop_draw + win_draw + ystart),
+                        (0, 0, 127), 4)
 
-        return bbox_list
+        return draw_img if vir else bbox_list
 
     def find_cars_scale(
         self,
         img,
-        scales=[1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
+        scales=[1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4],
+        vir=False
     ):
         result = []
-        for sc in scales:
-            result.extend(self.find_cars(img, scale=sc))
+        if vir:
+            for sc in scales:
+                result.append(self.find_cars(img, scale=sc, vir=vir))
+        else:
+            for sc in scales:
+                result.extend(self.find_cars(img, scale=sc, vir=vir))
         return result
 
     def process(self, img):
         bbox_list = self.find_cars_scale(img)
-        heatmap = svc.add_heat(bbox_list, threshold=4)
+        heatmap = svc.add_heat(bbox_list, threshold=2)
         out_img = svc.draw_labeled_bboxes(img, heatmap)
         return out_img
 
 
-def process_video(video_path, output_path):
+def init_pipeline():
     svc_scaler = Path("data.p")
     if svc_scaler.is_file():
         result = pickle.load(open("data.p", 'rb'))
@@ -129,25 +141,22 @@ def process_video(video_path, output_path):
         result = svc.generate_svc()
         pickle.dump(result, open("data.p", 'wb'))
     # import ipdb; ipdb.set_trace()
-    pipeline = Pipeline(*result)
+    return Pipeline(*result), svc_scaler
+
+
+def process_video(video_path, output_path):
+    pipeline, svc_scaler = init_pipeline()
     clip1 = VideoFileClip(video_path)
     output_video = clip1.fl_image(pipeline.process)
     output_video.write_videofile(output_path, audio=False)
 
 
 def generate_images():
-    svc_scaler = Path("data.p")
-    if svc_scaler.is_file():
-        result = pickle.load(open("data.p", 'rb'))
-    else:
-        result = svc.generate_svc()
-        pickle.dump(result, open("data.p", 'wb'))
-    # import ipdb; ipdb.set_trace()
-    pipeline = Pipeline(*result)
+    pipeline, svc_scaler = init_pipeline()
     for path in glob.glob('test_images/*.jpg'):
         img = misc.imread(path)
         bbox_list = pipeline.find_cars_scale(img)
-        heatmap = svc.add_heat(bbox_list, threshold=4)
+        heatmap = svc.add_heat(bbox_list, threshold=2)
         misc.imsave(
             'test_images_output/heatmap_' + Path(path).name,
             np.clip(heatmap, 0, 255)

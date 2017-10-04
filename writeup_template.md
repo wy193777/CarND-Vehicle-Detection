@@ -3,12 +3,24 @@
 [not-car]: ./examples/notcar.png
 [car-hog]: ./examples/car_YCrCb_hog.png
 [notcar-hog]: ./examples/notcar_YCrCb_hog.png
-[image2]: ./examples/HOG_example.jpg
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
+[s_w_1]: ./examples/sliding_window_1.png
+[s_w_2]: ./examples/sliding_window_1_4.png
+[s_w_3]: ./examples/sliding_window_1_8.png
+[s_w_4]: ./examples/sliding_window_2_2.png
+
+[bbbox1]: ./test_images_output/test1.jpg
+[bbbox2]: ./test_images_output/test2.jpg
+[bbbox3]: ./test_images_output/test3.jpg
+[bbbox4]: ./test_images_output/test4.jpg
+[hm1]: ./examples/hm1.png
+[hm2]: ./examples/hm2.png
+[hm3]: ./examples/hm3.png
+[hm4]: ./examples/hm4.png
+[label1]: ./test_images_output/heatmap_test1.jpg
+[label2]: ./test_images_output/heatmap_test2.jpg
+[label3]: ./test_images_output/heatmap_test3.jpg
+[label4]: ./test_images_output/heatmap_test4.jpg
+[final]: ./test_images_output/label_test1.jpg
 [video1]: ./project_video.mp4
 
 
@@ -33,55 +45,74 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 #### 2.Selection of HOG parameters.
 
-I used parameters from course example code. And it has more than 93 percent accuracy, so I don't have much motivation to try new parameters.
+I used parameters from course example code: 9 orientations, 8 pixels per cell, 2 cells per block. And it has more than 93 percent accuracy, so I don't have much motivation to try new parameters.
 
 #### 3. Train SVM.
 
-I trained a linear SVM using...
+I trained a linear SVM using 80% of all GTI and KITTI vehicle and non-vehicle images with default hyper parameters.
 
-###Sliding Window Search
+### Sliding Window Search
 
-####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
+#### 1. Implementation
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
+I implemented the sliding window from line 25 to line 110 in pipeline.py. Basically I only search from y == 400 to y == 650. Window moves with 75% overlap each step. And it sample each frame with image's width and height from 1 to 1/2.4 and increase dominator scales 0.2 per step.
 
-![alt text][image3]
+![alt text][s_w_1]
+![alt text][s_w_2]
+![alt text][s_w_3]
+![alt text][s_w_4]
 
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
+#### 2. Examples
 
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+Ultimately I searched on eight scales using YCrCb 3-channel HOG features which provided a nice result. Here are some example images:
 
-![alt text][image4]
+![alt text][bbbox1]
+![alt text][bbbox2]
+![alt text][bbbox3]
+![alt text][bbbox4]
 ---
 
 ### Video Implementation
 
-####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
+#### 1. Video Link
+Here's a [link to my video result](./output_project_video.mp4)
 
 
-####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+#### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.
+I recorded the positions of positive detections in each frame of the video. From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.
 
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+Here's an example result showing the heatmap from test images, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
-### Here are six frames and their corresponding heatmaps:
+### Four test images and their corresponding heatmaps:
 
-![alt text][image5]
+![alt text][hm1]
+![alt text][hm2]
+![alt text][hm3]
+![alt text][hm4]
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
+
+### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from four test images:
+![alt text][label1]
+![alt text][label2]
+![alt text][label3]
+![alt text][label4]
 
 ### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
+![alt text][final]
 
 
 
 ---
 
-###Discussion
+### Discussion
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+#### 1. Performance Issue
+hog method from skimage is largely implemented by python. So it's performance is terrible. On my laptop, handle one frame cost around 1.5 seconds. So this whole code isn't possible to run on a real car.
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
+#### 2. Partial Cars and Closed Cars.
+My code has difficulties to identified partial cars on image. Maybe more samples contains partial cars would be helpful. Also, it will combine multiple box together of two or more cars are to close to each other.
+
+
+#### 3. CNN + Sliding Window?
+Through the whole term 1, we just tried CNN to classify traffic signs. But I companies working on self-driving cars actually using trained CNN to identify different objects on road?
