@@ -54,7 +54,11 @@ I trained a linear SVM using 80% of all GTI and KITTI vehicle and non-vehicle im
 
 #### 1. Implementation
 
-I implemented the sliding window from line 25 to line 110 in pipeline.py. Basically I only search from y == 400 to y == 650. Window moves with 75% overlap each step. And it sample each frame with image's width and height from 1 to 1/2.4 and increase dominator scales 0.2 per step.
+I implemented the sliding window from line 25 to line 110 in pipeline.py. Basically it search from y == 400 to y == 650. This range covers all the road in most of the frames.
+
+Windows moves with 75% overlap each step. From the virtualization of searching windows, It already has enough resolution to generate several boxes for a car and will not have too much burdens for process.
+
+It sample each frame with image's width and height from 1 to 1/2.4 and increase dominator scales 0.2 per step. I tried different scales. Window scales larger than 2.5 is to large for the image. Other cars shouldn't that close to camera. Also too many windows sizes and scales will affect performance. I don't want to wait for one hour to process the project video.
 
 ![alt text][s_w_1]
 ![alt text][s_w_2]

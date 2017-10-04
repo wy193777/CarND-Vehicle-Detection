@@ -1,4 +1,4 @@
-import matplotlib.image as mpimg
+from collections import deque
 import matplotlib.pyplot as plt
 from scipy import misc
 import numpy as np
@@ -19,6 +19,7 @@ class Pipeline(object):
     def __init__(self, svc, scaler):
         self.svc = svc
         self.scaler = scaler
+        self.history = deque(maxlen=8)
 
     # Define a single function that can extract features using hog sub-sampling
     # and make predictions.
@@ -128,8 +129,10 @@ class Pipeline(object):
 
     def process(self, img):
         bbox_list = self.find_cars_scale(img)
-        heatmap = svc.add_heat(bbox_list, threshold=2)
-        out_img = svc.draw_labeled_bboxes(img, heatmap)
+        heatmap = svc.add_heat(bbox_list, threshold=3)
+        self.history.append(heatmap)
+        heatmap_sum = np.mean(np.array(self.history), axis=0)
+        out_img = svc.draw_labeled_bboxes(img, heatmap_sum)
         return out_img
 
 
