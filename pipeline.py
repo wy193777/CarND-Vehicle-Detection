@@ -26,7 +26,7 @@ class Pipeline(object):
         self,
         img, ystart=400, ystop=650, scale=1.5, orient=9,
         pix_per_cell=8,
-        cell_per_block=2, spatial_size=(32, 32), hist_bins=32
+        cell_per_block=2, spatial_size=(32, 32), hist_bins=32,
     ):
 
         draw_img = np.copy(img)
@@ -93,10 +93,7 @@ class Pipeline(object):
                     xbox_left = np.int(xleft * scale)
                     ytop_draw = np.int(ytop * scale)
                     win_draw = np.int(window * scale)
-                    # cv2.rectangle(
-                    #     draw_img, (xbox_left, ytop_draw + ystart),
-                    #     (xbox_left + win_draw, ytop_draw + win_draw + ystart),
-                    #     (0, 0, 255), 6)
+
                     bbox_list.append(
                         (
                             (xbox_left, ytop_draw + ystart),

@@ -1,7 +1,8 @@
 
-[//]: # (Image References)
 [car]: ./examples/car.png
 [not-car]: ./examples/notcar.png
+[car-hog]: ./examples/car_YCrCb_hog.png
+[notcar-hog]: ./examples/notcar_YCrCb_hog.png
 [image2]: ./examples/HOG_example.jpg
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
@@ -15,7 +16,7 @@
 
 #### 1. Extracted HOG features from the training images.
 
-The code for this step is contained in lines 18 through 27 of the file called `svc.py`.  
+The code for this step is contained in lines 18 through 27 of the file called `svc.py`.
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
@@ -27,13 +28,14 @@ I then explored different color spaces and different `skimage.hog()` parameters 
 Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
 
-![alt text][image2]
+![alt text][car-hog]
+![alt text][notcar-hog]
 
-####2. Explain how you settled on your final choice of HOG parameters.
+#### 2.Selection of HOG parameters.
 
-I tried various combinations of parameters and...
+I used parameters from course example code. And it has more than 93 percent accuracy, so I don't have much motivation to try new parameters.
 
-####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
+#### 3. Train SVM.
 
 I trained a linear SVM using...
 
@@ -60,7 +62,7 @@ Here's a [link to my video result](./project_video.mp4)
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
@@ -82,4 +84,4 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
